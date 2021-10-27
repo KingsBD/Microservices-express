@@ -1,0 +1,47 @@
+services:
+  mongodb:
+    image: mongo
+    expose:
+      - "27017"
+    volumes:
+      - db:/data/db
+    networks:
+      - n1
+  user_microservice_app:
+    build: ./User
+    depends_on:
+      - mongodb
+    ports:
+      - "8081:3000"
+    volumes:
+      - user_microservice_volume:/home/node_user/app
+    networks:
+      - n1
+  auth_microservice_app:
+    build: ./Auth
+    depends_on:
+      - user_microservice_app
+    ports:
+      - "8082:3001"
+    volumes:
+      - auth_microservice_volume:/home/node_auth/app
+    networks:
+      - n1
+  nginx:
+    restart: always
+    build: ./Nginx
+    ports:
+      - "8080:8080"
+    links:
+      - user_microservice_app
+      - auth_microservice_app
+    networks:
+      - n1
+
+volumes:
+  db:
+  user_microservice_volume:
+  auth_microservice_volume:
+
+networks:
+  n1:
